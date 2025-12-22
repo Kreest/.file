@@ -1,0 +1,24 @@
+#:schema https://jj-vcs.github.io/jj/latest/config-schema.json
+
+[ui]
+default-command = "log"
+editor = ["nvim"]
+merge-editor = "meld"
+
+[user]
+name = "kreest"
+email = "kreest503@gmail.com"
+
+[template-aliases]
+# Full timestamp in ISO 8601 format
+# 'format_timestamp(timestamp)' = 'timestamp'
+# Relative timestamp rendered as "x days/hours/seconds ago"
+'format_timestamp(timestamp)' = 'timestamp.ago()'
+'format_short_signature(signature)' = 'signature.name()'
+
+[git]
+track-default-bookmark-on-clone = true
+private-commits = "description(glob:'private:*')"
+
+[remotes.origin]
+auto-track-bookmarks = "glob:*/*"
