@@ -1,0 +1,9 @@
+export PATH="$HOME/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+export EDITOR=nvim
+
+if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
+  export MOZ_ENABLE_WAYLAND=1
+  export XDG_CURRENT_DESKTOP="sway" 
+
+  XDG_SESSION_DESKTOP=niri XKB_DEFAULT_LAYOUT=us exec dbus-run-session niri --session
+fi

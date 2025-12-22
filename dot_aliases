@@ -1,0 +1,24 @@
+## Colorize the ls output ##
+alias ls='ls --color=auto -h'
+
+## Use a long listing format ##
+alias ll='ls -l'
+
+## Show hidden files too ##
+alias l.='ll -A'
+
+## Bunch of colored outputs
+alias diff='diff --color=auto'
+alias grep='grep --color=auto'
+
+## Sane calendar
+alias cal='cal -m'
+
+## youtube-viewer
+alias yt='youtube-viewer'
+
+## Use nvim instead of vim
+alias vim='nvim'
+
+## Vim fzf
+alias vimf='nvim `fzf`'

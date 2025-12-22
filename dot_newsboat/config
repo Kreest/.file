@@ -1,0 +1,26 @@
+unbind-key h
+unbind-key j
+unbind-key k
+unbind-key l
+
+bind-key h quit
+bind-key j down
+bind-key k up
+bind-key l open
+
+save-path ~/news/
+
+browser "zen-browser %u"
+macro y set browser "nohup mpv --ytdl-format=136+250 %u 2>&1 &"; open-in-browser ; set browser "zen-browser %u"
+macro c set browser "echo %u | wl-copy"; open-in-browser ; set browser "zen-browser %u"
+macro t pipe-to "trans -e google -b 2>> ~/wordlists/log | gvim -c 'set go=' -R -"
+macro e pipe-to "egrep '(^Title:|^Link:)' - >> ~/vimwiki/Queue.md && echo '-------\n\n\n' >> ~/vimwiki/Queue.md"
+player "mpv"
+download-path "~/podcasts/%h/%n"
+
+use-proxy no
+auto-reload yes
+reload-time 60
+
+ssl-verifyhost no
+ssl-verifypeer no
