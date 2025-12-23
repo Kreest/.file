@@ -1,0 +1,15 @@
+profile plugged {
+    output "Samsung Electric Company S24A31x H4CR400093T" {
+        mode 1920x1080
+        position 1920,0
+        scale 1
+    }
+    output "Lenovo Group Limited 0x40A9 Unknown" {
+        position 0,0
+    }
+}
+profile nomad {
+    output "Lenovo Group Limited 0x40A9 Unknown" {
+        position 0,0
+    }
+}
