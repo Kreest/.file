@@ -252,8 +252,8 @@ binds {
 // Startup
 spawn-at-startup "waybar";
 spawn-at-startup "udiskie";
-spawn-at-startup "aw-qt";
-spawn-at-startup "aw-watcher-window-wayland";
+spawn-sh-at-startup "sleep 2; aw-qt";
+spawn-sh-at-startup "sleep 3; aw-watcher-window-wayland";
 spawn-at-startup "pipewire";
 spawn-at-startup "pipewire-pulse";
 spawn-at-startup "wireplumber";
