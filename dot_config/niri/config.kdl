@@ -117,7 +117,8 @@ binds {
     XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+3%"; }
     XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "3%-"; }
 
-    Mod+O repeat=false { toggle-overview; }
+    Mod+O { focus-monitor-next; }
+    Mod+Shift+O { move-workspace-to-monitor-next; }
 
     Mod+Shift+Q repeat=false { close-window; }
 
@@ -141,31 +142,14 @@ binds {
 
     Mod+Home { focus-column-first; }
     Mod+End  { focus-column-last; }
-    Mod+Ctrl+Home { move-column-to-first; }
-    Mod+Ctrl+End  { move-column-to-last; }
-
-    Mod+Ctrl+Left  { focus-monitor-left; }
-    Mod+Ctrl+Down  { focus-monitor-down; }
-    Mod+Ctrl+Up    { focus-monitor-up; }
-    Mod+Ctrl+Right { focus-monitor-right; }
-    Mod+Ctrl+H     { focus-monitor-left; }
-    Mod+Ctrl+J     { focus-monitor-down; }
-    Mod+Ctrl+K     { focus-monitor-up; }
-    Mod+Ctrl+L     { focus-monitor-right; }
-
-    Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
-    Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }
-    Mod+Shift+Ctrl+Up    { move-column-to-monitor-up; }
-    Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
-    Mod+Shift+Ctrl+H     { move-column-to-monitor-left; }
-    Mod+Shift+Ctrl+J     { move-column-to-monitor-down; }
-    Mod+Shift+Ctrl+K     { move-column-to-monitor-up; }
-    Mod+Shift+Ctrl+L     { move-column-to-monitor-right; }
+    Mod+Shift+Home { move-column-to-first; }
+    Mod+Shift+End  { move-column-to-last; }
 
     Mod+Page_Down      { focus-workspace-down; }
     Mod+Page_Up        { focus-workspace-up; }
     Mod+Shift+Page_Down { move-column-to-workspace-down; }
     Mod+Shift+Page_Up   { move-column-to-workspace-up; }
+    Mod+grave {focus-workspace-previous;}
 
     Mod+Ctrl+Page_Down { move-workspace-down; }
     Mod+Ctrl+Page_Up   { move-workspace-up; }
@@ -240,7 +224,7 @@ binds {
 
     Mod+Shift+E { quit; }
     Ctrl+Alt+Delete { quit; }
-    Mod+Space { spawn-sh "killall -SIGUSR1 waybar"; }
+    Mod+Space { spawn-sh "qs -c noctalia-shell ipc call bar toggle"; }
     Ctrl+Shift+Space { spawn-sh "passmenu"; }
     Mod+Shift+V  { spawn-sh "cliphist list | dmenu | cliphist decode | wl-copy";}
     Mod+Backslash { spawn-sh "cat ~/wordlists/czech.txt | wofi --dmenu -sort -matching fuzzy -i -p 'translate' | trans -b cs:en | xargs -I{} notify-send Translation '{}'";}
@@ -249,8 +233,52 @@ binds {
     Mod+Shift+Escape {spawn-sh "makoctl dismiss --all";}
 }
 
+
+recent-windows {
+    // off
+    debounce-ms 750
+
+    open-delay-ms 150
+
+    highlight {
+        active-color "#999999ff"
+        urgent-color "#ff9999ff"
+        padding 30
+        corner-radius 0
+    }
+
+    previews {
+        max-height 480
+        max-scale 0.5
+    }
+
+    binds {
+        Mod+Tab         { next-window; }
+        Mod+Shift+Tab   { previous-window; }
+
+        Alt+Tab         { next-window; }
+        Alt+Shift+Tab   { previous-window; }
+    }
+}
+
+debug {
+  // Allows notification actions and window activation from Noctalia.
+  honor-xdg-activation-with-invalid-serial
+}
+
+layer-rule {
+  match namespace="^noctalia-wallpaper*"
+  place-within-backdrop true
+}
+
+gestures {
+    hot-corners {
+        off
+    }
+}
+
 // Startup
-spawn-at-startup "waybar";
+spawn-at-startup "noctalia" "run";
 spawn-at-startup "udiskie";
 spawn-sh-at-startup "sleep 2; aw-qt";
 spawn-sh-at-startup "sleep 3; aw-watcher-window-wayland";
