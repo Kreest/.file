@@ -35,3 +35,8 @@ private-commits = "description(glob:'private:*')"
 
 [remotes.origin]
 auto-track-bookmarks = "glob:*/*"
+
+[fix.tools.rustfmt]
+enabled = false
+command = ["rustfmt", "--emit", "stdout"]
+patterns = ["glob:'**/*.rs'"]
