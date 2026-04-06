@@ -109,6 +109,7 @@ require('lazy').setup({
   'ledger/vim-ledger',
   'vimwiki/vimwiki',
   'DaeZak/crafttweaker-vim-highlighting',
+  'krisajenkins/neojj',
   {
     'AckslD/messages.nvim',
     config = 'require("messages").setup()',
@@ -933,23 +934,23 @@ local servers = {
   ruff = {},
   pylsp = {},
   rust_analyzer = {
-    imports = {
-      granularity = {
-        group = "module",
-      },
-      prefix = "self",
-    },
-    cargo = {
-      buildScripts = {
-        enable = true,
-      },
-    },
-    procMacro = {
-      enable = false,
-    },
-    diagnostics = {
-      disabled = {"inactive-code"},
-    },
+    -- imports = {
+    --   granularity = {
+    --     group = "module",
+    --   },
+    --   prefix = "self",
+    -- },
+    -- cargo = {
+    --   buildScripts = {
+    --     enable = true,
+    --   },
+    -- },
+    -- procMacro = {
+    --   enable = false,
+    -- },
+    -- diagnostics = {
+    --   disabled = {"inactive-code"},
+    -- },
   },
   openscad_lsp = {},
   texlab = {},
@@ -1229,3 +1230,39 @@ require'treesitter-context'.setup{
 }
 
 nnoremap('<leader>tc', ':TSContext toggle<CR>')
+vim.g.rustaceanvim = {
+  -- Plugin configuration
+  tools = {
+  },
+  -- LSP configuration
+  server = {
+    on_attach = on_attach,
+    default_settings = {
+      -- rust-analyzer language server configuration
+      ['rust-analyzer'] = {
+        imports = {
+          granularity = {
+            group = "module",
+          },
+          prefix = "self",
+        },
+        cargo = {
+          buildScripts = {
+            enable = true,
+          },
+        },
+        completion = {
+          fullFunctionSignature = {
+            enable = true,
+          }
+        },
+        diagnostics = {
+          disabled = {"inactive-code"},
+        },
+      },
+    },
+  },
+  -- DAP configuration
+  dap = {
+  },
+}
