@@ -6,6 +6,7 @@ profile plugged {
     }
     output "Lenovo Group Limited 0x40A9 Unknown" {
         position 0,1080
+        scale 1
     }
 }
 profile nomad {
