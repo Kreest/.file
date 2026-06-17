@@ -15,7 +15,7 @@ vim.o.linebreak = true
 --    https://github.com/folke/lazy.nvim
 --    `:help lazy.nvim.txt` for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system {
     'git',
     'clone',
@@ -77,18 +77,6 @@ local on_attach = function(_, bufnr)
   end, { desc = 'Format current buffer with LSP' })
 end
 
-local on_attach_rust = function(_, bufnr)
-  on_attach(_, bufnr)
-  local nmap = function(keys, func, desc)
-    if desc then
-      desc = 'LSP: ' .. desc
-    end
-    vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
-  end
-
-  -- nmap('<leader>ca', function () vim.cmd.RustLsp('codeAction') end, '[C]ode [A]ction')
-end
-
 -- [[ Configure plugins ]]
 require('lazy').setup({
   -- Git related plugins
@@ -112,7 +100,7 @@ require('lazy').setup({
   'krisajenkins/neojj',
   {
     'AckslD/messages.nvim',
-    config = 'require("messages").setup()',
+    config = true,
   },
   {
     'Dronakurl/injectme.nvim',
@@ -128,25 +116,7 @@ require('lazy').setup({
     'mrcjkb/rustaceanvim',
     version = '^5', -- Recommended
     lazy = false, -- This plugin is already lazy
-    config = function()
-      vim.g.rustaceanvim = {
-        server = {
-          on_attach = on_attach_rust,
-          -- cmd = function()
-          --   local mason_registry = require('mason-registry')
-          --   if mason_registry.is_installed('rust-analyzer') then
-          --     -- This may need to be tweaked depending on the operating system.
-          --     local ra = mason_registry.get_package('rust-analyzer')
-          --     local ra_filename = ra:get_receipt():get().links.bin['rust-analyzer']
-          --     return { ('%s/%s'):format(ra:get_install_path(), ra_filename or 'rust-analyzer') }
-          --   else
-          --     -- global installation
-          --     return { 'rust-analyzer' }
-          --   end
-          -- end,
-        },
-      }
-    end
+    -- Configured via `vim.g.rustaceanvim` near the bottom of this file.
   },
   {
     'saecki/crates.nvim',
@@ -225,7 +195,6 @@ require('lazy').setup({
     'junegunn/vim-easy-align',
     config = function()
       vim.keymap.set('x', '<Leader>a', '<Plug>(EasyAlign)')
-      vim.keymap.set('n', '<Leader>a', '<Plug>(EasyAlign)') -- Currently not working
     end
   },
 
@@ -404,8 +373,6 @@ require('lazy').setup({
       vim.cmd.hi('Normal ctermbg=none guibg=none')
     end,
   },
-  'kien/rainbow_parentheses.vim',
-
   {
     -- Set lualine as statusline
     'nvim-lualine/lualine.nvim',
@@ -495,6 +462,49 @@ require('lazy').setup({
       'nvim-treesitter/nvim-treesitter-context',
     },
     build = ':TSUpdate',
+  },
+  {
+    -- Indentation-based context as a fallback for buffers without a
+    -- treesitter parser (treesitter-context handles the rest).
+    -- Fork adds `g:context_base = 'topline'` to match treesitter-context.
+    'Kreest/context.vim',
+    branch = 'topline-mode',
+    init = function()
+      -- Off by default; enabled per-window below only when there's no parser.
+      vim.g.context_enabled = 0
+      -- Anchor context to the top visible line, like treesitter-context's
+      -- `mode = 'topline'`, instead of the cursor line.
+      vim.g.context_base = 'topline'
+    end,
+    config = function()
+      local group = vim.api.nvim_create_augroup('ContextVimFallback', { clear = true })
+      local function refresh(buf)
+        local ok, parser = pcall(vim.treesitter.get_parser, buf, nil, { error = false })
+        if ok and parser then
+          vim.cmd('silent! ContextDisableWindow') -- treesitter-context covers this buffer
+        else
+          vim.cmd('silent! ContextEnableWindow') -- fall back to indentation context
+        end
+      end
+      vim.api.nvim_create_autocmd({ 'BufWinEnter', 'FileType' }, {
+        group = group,
+        callback = function(args) refresh(args.buf) end,
+      })
+      -- context.vim's own VimEnter handler runs `unlet! w:context`, which wipes
+      -- any per-window enable we set during startup. Re-apply after it runs
+      -- (vim.schedule pushes us past that handler).
+      vim.api.nvim_create_autocmd('VimEnter', {
+        group = group,
+        callback = function()
+          vim.schedule(function() refresh(vim.api.nvim_get_current_buf()) end)
+        end,
+      })
+      -- If the plugin is loaded after startup (e.g. :Lazy reload), VimEnter
+      -- won't fire again, so apply once now.
+      if vim.v.vim_did_enter == 1 then
+        refresh(vim.api.nvim_get_current_buf())
+      end
+    end,
   },
   {
     "folke/zen-mode.nvim",
@@ -742,17 +752,17 @@ vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = tr
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '[d', function() vim.diagnostic.jump{count= 1} end, { desc = 'Go to previous diagnostic message' })
-vim.keymap.set('n', ']d', function() vim.diagnostic.jump{count=-1} end, { desc = 'Go to next diagnostic message' })
+vim.keymap.set('n', '[d', function() vim.diagnostic.jump{count=-1} end, { desc = 'Go to previous diagnostic message' })
+vim.keymap.set('n', ']d', function() vim.diagnostic.jump{count= 1} end, { desc = 'Go to next diagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
 
 -- [[ Highlight on yank ]]
--- See `:help vim.highlight.on_yank()`
+-- See `:help vim.hl.on_yank()`
 local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
 vim.api.nvim_create_autocmd('TextYankPost', {
   callback = function()
-    vim.highlight.on_yank()
+    vim.hl.on_yank()
   end,
   group = highlight_group,
   pattern = '*',
@@ -761,14 +771,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
 require('telescope').setup {
-  defaults = {
-    mappings = {
-      i = {
-        ['<C-u>'] = false,
-        ['<C-d>'] = false,
-      },
-    },
-  },
   extensions = {
     fzf = {
       fuzzy = true,                   -- false will only do exact matching
@@ -779,9 +781,9 @@ require('telescope').setup {
   }
 }
 
+
 -- Enable telescope fzf native, if installed
 pcall(require('telescope').load_extension, 'fzf')
-pcall(require('telescope').load_extension, 'git_signs')
 pcall(require('telescope').load_extension, 'dap')
 
 -- Telescope live_grep in git root
@@ -856,7 +858,7 @@ vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = 
 vim.defer_fn(function()
   require('nvim-treesitter.configs').setup {
     -- Add languages to be installed here that you want installed for treesitter
-    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash', 'latex', 'slint' },
+    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash', 'latex', 'slint', 'json', 'xml' },
 
     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
     auto_install = false,
@@ -918,11 +920,6 @@ vim.defer_fn(function()
   }
 end, 0)
 
--- mason-lspconfig requires that these setup functions are called in this order
--- before setting up the servers.
-require('mason').setup()
-require('mason-lspconfig').setup()
-
 -- Enable the following language servers
 local servers = {
   clangd = {
@@ -933,35 +930,20 @@ local servers = {
   gopls = {},
   ruff = {},
   pylsp = {},
-  rust_analyzer = {
-    -- imports = {
-    --   granularity = {
-    --     group = "module",
-    --   },
-    --   prefix = "self",
-    -- },
-    -- cargo = {
-    --   buildScripts = {
-    --     enable = true,
-    --   },
-    -- },
-    -- procMacro = {
-    --   enable = false,
-    -- },
-    -- diagnostics = {
-    --   disabled = {"inactive-code"},
-    -- },
-  },
+  -- Disabled below (rustaceanvim drives rust_analyzer); kept here only so mason installs the binary.
+  rust_analyzer = {},
   openscad_lsp = {},
   texlab = {},
   html = { filetypes = { 'html', 'twig', 'hbs' } },
 
   lua_ls = {
-    Lua = {
-      workspace = { checkThirdParty = false },
-      telemetry = { enable = false },
-      -- NOTE: toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-      diagnostics = { disable = { 'missing-fields' } },
+    settings = {
+      Lua = {
+        workspace = { checkThirdParty = false },
+        telemetry = { enable = false },
+        -- NOTE: toggle below to ignore Lua_LS's noisy `missing-fields` warnings
+        diagnostics = { disable = { 'missing-fields' } },
+      },
     },
     single_file_support = false,
   },
@@ -978,18 +960,25 @@ mason_lspconfig.setup {
   ensure_installed = vim.tbl_keys(servers),
 }
 
-vim.lsp.config("*", {
+-- Shared defaults applied to every server, then per-server overrides from `servers`.
+vim.lsp.config('*', {
   on_attach = on_attach,
+  capabilities = capabilities,
 })
 
+for name, cfg in pairs(servers) do
+  vim.lsp.config(name, cfg)
+end
+
+-- rustaceanvim manages rust_analyzer itself, so keep the lspconfig one disabled.
 vim.lsp.enable('rust_analyzer', false)
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
 local cmp = require 'cmp'
 local luasnip = require 'luasnip'
 require('luasnip.loaders.from_vscode').lazy_load()
-require('luasnip.loaders.from_snipmate').lazy_load({ paths = { vim.loop.cwd() .. "/snippets"}})
-require('luasnip.loaders.from_lua').lazy_load({ paths = { vim.loop.cwd() .. "/snippets"}})
+require('luasnip.loaders.from_snipmate').lazy_load({ paths = { vim.uv.cwd() .. "/snippets"}})
+require('luasnip.loaders.from_lua').lazy_load({ paths = { vim.uv.cwd() .. "/snippets"}})
 luasnip.config.setup {}
 
 cmp.setup {
@@ -1052,7 +1041,6 @@ nnoremap('Q', '@q')
 nnoremap('<Leader>v', ':so $MYVIMRC<CR>:edit!<CR>')
 nnoremap('<C-n>', require('nvim-tree.api').tree.toggle)
 nnoremap('<leader>n', require('nvim-tree.api').tree.find_file)
--- nnoremap('<C-h>', vim.cmd.UndotreeToggle)
 
 local function toggle_inlay()
   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
@@ -1206,13 +1194,6 @@ debug.traceback = function(message, level) -- For getting full paths in tracebac
   return table.concat(trace, "\n")
 end
 
-vim.api.nvim_create_autocmd("FileType", {
-    pattern = "markdown",
-    callback = function()
-        -- require("otter").activate()
-    end,
-})
-
 require'treesitter-context'.setup{
   enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
   multiwindow = false, -- Enable multiwindow support.
@@ -1266,3 +1247,5 @@ vim.g.rustaceanvim = {
   dap = {
   },
 }
+
+nnoremap('<C-p>', require('telescope.builtin').commands)
