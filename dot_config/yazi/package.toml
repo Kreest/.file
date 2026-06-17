@@ -1,7 +1,14 @@
-[plugin]
-deps = []
+[[plugin.deps]]
+use = "dedukun/bookmarks"
+rev = "9ef1254"
+hash = "92fbb5483657fa7976cdf4e0104e18e0"
+
+[[plugin.deps]]
+use = "boydaihungst/simple-tag"
+rev = "e8be031"
+hash = "50ba6725b86ae62c626d27eb5836decb"
 
 [[flavor.deps]]
 use = "yazi-rs/flavors:dracula"
-rev = "2d73b79"
-hash = "fc6944561718351d70cffde75839211f"
+rev = "0f9204b"
+hash = "20624fcdfcf7e4e912de05e348065e5e"
