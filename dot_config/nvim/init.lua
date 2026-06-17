@@ -127,7 +127,7 @@ require('lazy').setup({
           enabled = true,
           on_attach = on_attach,
           actions = true,
-          completion = true,
+          completion = false, -- completion is provided via nvim-cmp source below, not the crates LSP
           hover = true,
         },
         completion = {
@@ -217,7 +217,7 @@ require('lazy').setup({
       'williamboman/mason-lspconfig.nvim',
 
       -- Useful status updates UI for LSP
-      { 'j-hui/fidget.nvim',       opts = {} },
+      { 'j-hui/fidget.nvim',       opts = { notification = { window = { avoid = { 'NvimTree' } } } } },
     },
   },
 
